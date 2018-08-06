@@ -23,6 +23,15 @@ ARG LARADOCK_PHP_VERSION
 # Set Environment Variables
 ENV DEBIAN_FRONTEND noninteractive
 
+COPY ./sources.list.aliyun /etc/apt/sources.list
+RUN rm -rf /var/lib/apt/lists/* && \
+    apt-get clean && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 3B4FE6ACC0B21F32
+    # apt-get update && \
+
+RUN pear config-set http_proxy ""
+
 # always run apt update when start and after add new source list, then clean up at end.
 RUN apt-get update -yqq && \
     apt-get install -y apt-utils && \
@@ -452,12 +461,14 @@ RUN if [ ${INSTALL_IMAGE_OPTIMIZERS} = true ]; then \
 USER root
 
 ARG INSTALL_IMAGEMAGICK=false
+RUN pecl config-show
 
 RUN if [ ${INSTALL_IMAGEMAGICK} = true ]; then \
-    apt-get install -y libmagickwand-dev imagemagick && \
+    apt-get install -y imagemagick && \
     pecl install imagick && \
     docker-php-ext-enable imagick \
 ;fi
+
 
 ###########################################################################
 # IMAP:
