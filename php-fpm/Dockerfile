@@ -106,11 +106,22 @@ ARG INSTALL_XDEBUG=false
 RUN if [ ${INSTALL_XDEBUG} = true ]; then \
   # Install the xdebug extension
   if [ $(php -r "echo PHP_MAJOR_VERSION;") = "5" ]; then \
-    pecl install xdebug-2.5.5; \
+    curl -L -o /tmp/xdebug.tar.gz "https://github.com/xdebug/xdebug/archive/XDEBUG_2_5_5.tar.gz"; \
   else \
-    pecl install xdebug; \
+    curl -L -o /tmp/xdebug.tar.gz "https://github.com/xdebug/xdebug/archive/2.6.1.tar.gz"; \
   fi && \
-  docker-php-ext-enable xdebug \
+  mkdir -p xdebug \
+    && tar -C xdebug -zxvf /tmp/xdebug.tar.gz --strip 1 \
+    && ( \
+        cd xdebug \
+        && phpize \
+        && ./configure \
+        && make -j$(nproc) \
+        && make install \
+    ) \
+    && rm -r xdebug \
+    && rm /tmp/xdebug.tar.gz \
+    && docker-php-ext-enable xdebug \
 ;fi
 
 # Copy xdebug configuration for remote debugging
